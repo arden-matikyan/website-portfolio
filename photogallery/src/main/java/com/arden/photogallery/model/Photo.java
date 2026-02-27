@@ -11,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
 
-
 // @Entity (from javax.persistence or jakarta.persistence) marks the class as a JPA entity that will be persisted to a database table
 // @Data (from Lombok) is a compile‑time code generator that creates getters, setters, toString, equals, hashCode, and a required‑args constructor for all non‑final fields
 @Entity
@@ -24,7 +23,10 @@ public class Photo {
 
     private String title;
 
-   @Column(length = 2000)
+    @Column(columnDefinition = "vector(1536)")
+    private float[] embedding;
+
+    @Column(length = 2000)
     private String caption;
 
     private String mood;

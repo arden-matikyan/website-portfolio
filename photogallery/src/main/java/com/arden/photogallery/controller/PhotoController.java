@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.arden.photogallery.model.Photo;
+import com.arden.photogallery.repository.PhotoRepository;
+import com.arden.photogallery.service.EmbeddingService;
 import com.arden.photogallery.service.OpenAIService;
 import com.arden.photogallery.service.PhotoService;
 import com.arden.photogallery.service.S3Service;
@@ -32,6 +34,8 @@ public class PhotoController {
     private final S3Service s3Service;
     // private final AIService aiService;
     private final OpenAIService openAIService;
+    private final EmbeddingService embeddingService;
+    private final PhotoRepository photoRepository;
 
     @PostMapping
     public Photo createPhoto(@RequestBody Photo photo) {
@@ -53,12 +57,28 @@ public class PhotoController {
         photoService.deletePhoto(id);
     }
 
-    /* 
     @GetMapping("/search")
-    public List<Photo> search(@RequestParam String q) {
-        return photoService.search(q);
+    public List<Photo> semanticSearch(@RequestParam String q) {
+
+        float[] queryVector = embeddingService.generateEmbedding(q);
+
+        String vectorLiteral = toVectorLiteral(queryVector);
+
+        return photoRepository.searchByEmbedding(vectorLiteral);
     }
-    */ 
+
+    private String toVectorLiteral(float[] vector) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < vector.length; i++) {
+            sb.append(vector[i]);
+            if (i < vector.length - 1) {
+                sb.append(",");
+            }
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
 
     @PostMapping("/upload")
     public Photo uploadPhoto(
@@ -93,11 +113,27 @@ public class PhotoController {
         photo.setTitle(title);
         photo.setS3Url(s3Url);
 
+
+
+
         photo.setCaption((String) metadata.get("caption"));
         photo.setMood((String) metadata.get("mood"));
         photo.setStyle((String) metadata.get("style"));
         photo.setLighting((String) metadata.get("lighting"));
         photo.setPrimarySubject((String) metadata.get("primary_subject"));
+
+
+        String combinedText =
+        metadata.get("caption") + " " +
+        metadata.get("mood") + " " +
+        metadata.get("style") + " " +
+        metadata.get("lighting");
+
+        float[] vector = embeddingService.generateEmbedding(combinedText);
+
+        photo.setEmbedding(vector);
+
+
 
         return photoService.savePhoto(photo);
     }
