@@ -18,10 +18,26 @@ public interface PhotoRepository extends JpaRepository<Photo, Long> {
     // List<Photo> findByTagsContainingIgnoreCase(String tag);
 
    @Query(value = """
-        SELECT id, title, s3url, caption, mood, style, lighting, primary_subject, embedding, created_at
+        SELECT id
         FROM photo
         ORDER BY embedding <-> CAST(:queryEmbedding AS vector)
         LIMIT 10
         """, nativeQuery = true)
-    List<Photo> searchByEmbedding(@Param("queryEmbedding") String queryEmbedding);
+    List<Long> searchIdsByEmbedding(@Param("queryEmbedding") String queryEmbedding);
+
+    @Query(value = """
+        SELECT
+            id AS id,
+            title AS title,
+            s3url AS s3Url,
+            caption AS caption,
+            mood AS mood,
+            style AS style,
+            lighting AS lighting,
+            primary_subject AS primarySubject,
+            created_at AS createdAt
+        FROM photo
+        WHERE id IN (:ids)
+        """, nativeQuery = true)
+    List<PhotoSearchRow> findSearchRowsByIds(@Param("ids") List<Long> ids);
     }

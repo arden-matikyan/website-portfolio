@@ -1,6 +1,7 @@
 package com.arden.photogallery.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.arden.photogallery.model.Photo;
 import com.arden.photogallery.repository.PhotoRepository;
+import com.arden.photogallery.repository.PhotoSearchRow;
 import com.arden.photogallery.service.EmbeddingService;
 import com.arden.photogallery.service.OpenAIService;
 import com.arden.photogallery.service.PhotoService;
@@ -64,7 +66,33 @@ public class PhotoController {
 
         String vectorLiteral = toVectorLiteral(queryVector);
 
-        return photoRepository.searchByEmbedding(vectorLiteral);
+        List<Long> ids = photoRepository.searchIdsByEmbedding(vectorLiteral);
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, PhotoSearchRow> rowsById = new HashMap<>();
+        for (PhotoSearchRow row : photoRepository.findSearchRowsByIds(ids)) {
+            rowsById.put(row.getId(), row);
+        }
+
+        return ids.stream()
+                .map(rowsById::get)
+                .filter(java.util.Objects::nonNull)
+                .map(row -> {
+                    Photo photo = new Photo();
+                    photo.setId(row.getId());
+                    photo.setTitle(row.getTitle());
+                    photo.setS3Url(row.getS3Url());
+                    photo.setCaption(row.getCaption());
+                    photo.setMood(row.getMood());
+                    photo.setStyle(row.getStyle());
+                    photo.setLighting(row.getLighting());
+                    photo.setPrimarySubject(row.getPrimarySubject());
+                    photo.setCreatedAt(row.getCreatedAt());
+                    return photo;
+                })
+                .toList();
     }
 
     private String toVectorLiteral(float[] vector) {
@@ -112,8 +140,6 @@ public class PhotoController {
         Photo photo = new Photo();
         photo.setTitle(title);
         photo.setS3Url(s3Url);
-
-
 
 
         photo.setCaption((String) metadata.get("caption"));
