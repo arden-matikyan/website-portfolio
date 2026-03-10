@@ -11,5 +11,8 @@ public interface PhotoSearchRow {
     String getStyle();
     String getLighting();
     String getPrimarySubject();
+    Integer getWidth();
+    Integer getHeight();
+    Double getAspectRatio();
     LocalDateTime getCreatedAt();
 }

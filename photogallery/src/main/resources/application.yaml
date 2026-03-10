@@ -21,3 +21,8 @@ aws:
 
 openai:
   api-key: ${OPENAI_API_KEY}
+
+app:
+  ai:
+    # Set true to bypass OpenAI vision + embedding calls with deterministic mock data.
+    mock-enabled: ${MOCK_AI_ENABLED:false}

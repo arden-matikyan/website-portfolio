@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.arden.photogallery.model.Photo;
 import com.arden.photogallery.repository.PhotoRepository;
+import com.arden.photogallery.repository.PhotoSearchRow;
 
 import lombok.RequiredArgsConstructor;
 // @Service: . It’s primarily a semantic marker for the service layer (business logic), but functionally identical to @Component
@@ -23,7 +24,10 @@ public class PhotoService {
     }
 
     public List<Photo> getAllPhotos() {
-        return photoRepository.findAll();
+        return photoRepository.findAllGalleryRows()
+                .stream()
+                .map(this::toPhoto)
+                .toList();
     }
 
     public Photo getPhoto(Long id) {
@@ -33,6 +37,23 @@ public class PhotoService {
 
     public void deletePhoto(Long id) {
         photoRepository.deleteById(id);
+    }
+
+    private Photo toPhoto(PhotoSearchRow row) {
+        Photo photo = new Photo();
+        photo.setId(row.getId());
+        photo.setTitle(row.getTitle());
+        photo.setS3Url(row.getS3Url());
+        photo.setCaption(row.getCaption());
+        photo.setMood(row.getMood());
+        photo.setStyle(row.getStyle());
+        photo.setLighting(row.getLighting());
+        photo.setPrimarySubject(row.getPrimarySubject());
+        photo.setWidth(row.getWidth());
+        photo.setHeight(row.getHeight());
+        photo.setAspectRatio(row.getAspectRatio());
+        photo.setCreatedAt(row.getCreatedAt());
+        return photo;
     }
 
     /* 

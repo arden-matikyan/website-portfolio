@@ -39,6 +39,12 @@ public class Photo {
 
     private String s3Url;
 
+    private Integer width;
+
+    private Integer height;
+
+    @Column(name = "aspect_ratio")
+    private Double aspectRatio;
 
     private LocalDateTime createdAt;
 }

@@ -1,10 +1,16 @@
 package com.arden.photogallery.controller;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import javax.imageio.ImageIO;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +38,11 @@ import lombok.RequiredArgsConstructor;
 @CrossOrigin
 public class PhotoController {
 
+    private static final int EMBEDDING_DIMENSION = 1536;
+
+    @Value("${app.ai.mock-enabled:false}")
+    private boolean mockAiEnabled;
+
     private final PhotoService photoService;
     private final S3Service s3Service;
     // private final AIService aiService;
@@ -46,12 +57,15 @@ public class PhotoController {
 
     @GetMapping
     public List<Photo> getAllPhotos() {
-        return photoService.getAllPhotos();
+        return photoService.getAllPhotos()
+                .stream()
+                .map(this::withReadableS3Url)
+                .toList();
     }
 
     @GetMapping("/{id:\\d+}")
     public Photo getPhoto(@PathVariable Long id) {
-        return photoService.getPhoto(id);
+        return withReadableS3Url(photoService.getPhoto(id));
     }
 
     @DeleteMapping("/{id}")
@@ -62,7 +76,9 @@ public class PhotoController {
     @GetMapping("/search")
     public List<Photo> semanticSearch(@RequestParam String q) {
 
-        float[] queryVector = embeddingService.generateEmbedding(q);
+        float[] queryVector = mockAiEnabled
+                ? buildMockEmbedding(q)
+                : embeddingService.generateEmbedding(q);
 
         String vectorLiteral = toVectorLiteral(queryVector);
 
@@ -83,16 +99,33 @@ public class PhotoController {
                     Photo photo = new Photo();
                     photo.setId(row.getId());
                     photo.setTitle(row.getTitle());
-                    photo.setS3Url(row.getS3Url());
+                    photo.setS3Url(s3Service.generatePresignedUrlFromStoredUrl(row.getS3Url()));
                     photo.setCaption(row.getCaption());
                     photo.setMood(row.getMood());
                     photo.setStyle(row.getStyle());
                     photo.setLighting(row.getLighting());
                     photo.setPrimarySubject(row.getPrimarySubject());
+                    photo.setWidth(row.getWidth());
+                    photo.setHeight(row.getHeight());
+                    photo.setAspectRatio(row.getAspectRatio());
                     photo.setCreatedAt(row.getCreatedAt());
                     return photo;
                 })
                 .toList();
+    }
+
+    private Photo withReadableS3Url(Photo photo) {
+        if (photo == null) {
+            return null;
+        }
+
+        String storedUrl = photo.getS3Url();
+        if (storedUrl == null || storedUrl.isBlank()) {
+            return photo;
+        }
+
+        photo.setS3Url(s3Service.generatePresignedUrlFromStoredUrl(storedUrl));
+        return photo;
     }
 
     private String toVectorLiteral(float[] vector) {
@@ -114,32 +147,38 @@ public class PhotoController {
             @RequestParam(required = false) String title
     ) throws IOException {
 
+        byte[] fileBytes = file.getBytes();
+        ImageDimensions dimensions = extractImageDimensions(fileBytes);
+
         // upload to s3 
         String s3Url = s3Service.uploadFile(
                 file.getOriginalFilename(),
-                file.getBytes()
+                fileBytes
         );
-
-        // extract object key 
-        String objectKey = s3Url.substring(s3Url.lastIndexOf("/") + 1);
-
-        // generate url for gpt access 
-        String presignedUrl = s3Service.generatePresignedUrl(objectKey);
-
-        System.out.println("Presigned URL: " + presignedUrl);
-
-       // use gpt vision to analyze image 
-        Map<String, Object> metadata;
-        try {
-            metadata = openAIService.analyzeImage(presignedUrl);
-        } catch (Exception e) {
-            throw new RuntimeException("Vision analysis failed", e);
-        }
 
         // save with gpt output 
         Photo photo = new Photo();
         photo.setTitle(title);
         photo.setS3Url(s3Url);
+        if (dimensions != null) {
+            photo.setWidth(dimensions.width());
+            photo.setHeight(dimensions.height());
+            photo.setAspectRatio(dimensions.aspectRatio());
+        }
+
+        // use gpt vision to analyze image 
+        Map<String, Object> metadata;
+        if (mockAiEnabled) {
+            metadata = buildMockMetadata(title, file.getOriginalFilename());
+        } else {
+            String objectKey = s3Url.substring(s3Url.lastIndexOf("/") + 1);
+            String presignedUrl = s3Service.generatePresignedUrl(objectKey);
+            try {
+                metadata = openAIService.analyzeImage(presignedUrl);
+            } catch (Exception e) {
+                throw new RuntimeException("Vision analysis failed", e);
+            }
+        }
 
 
         photo.setCaption((String) metadata.get("caption"));
@@ -155,13 +194,63 @@ public class PhotoController {
         metadata.get("style") + " " +
         metadata.get("lighting");
 
-        float[] vector = embeddingService.generateEmbedding(combinedText);
+
+
+
+        float[] vector = mockAiEnabled
+                ? buildMockEmbedding(combinedText)
+                : embeddingService.generateEmbedding(combinedText);
 
         photo.setEmbedding(vector);
 
 
 
-        return photoService.savePhoto(photo);
+        Photo savedPhoto = photoService.savePhoto(photo);
+        return withReadableS3Url(savedPhoto);
     }
 
+    private Map<String, Object> buildMockMetadata(String title, String originalFilename) {
+        String fallbackTitle = (title != null && !title.isBlank())
+                ? title
+                : (originalFilename != null ? originalFilename : "Untitled");
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("caption", "Mock caption for " + fallbackTitle);
+        metadata.put("mood", "calm");
+        metadata.put("style", "documentary");
+        metadata.put("lighting", "natural");
+        metadata.put("primary_subject", fallbackTitle);
+        return metadata;
+    }
+
+    private float[] buildMockEmbedding(String seedText) {
+        String source = (seedText == null || seedText.isBlank()) ? "mock-seed" : seedText;
+        Random random = new Random(source.hashCode());
+        float[] vector = new float[EMBEDDING_DIMENSION];
+
+        for (int i = 0; i < vector.length; i++) {
+            vector[i] = (float) (random.nextDouble() * 2.0 - 1.0);
+        }
+
+        return vector;
+    }
+
+    private ImageDimensions extractImageDimensions(byte[] fileBytes) {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(fileBytes)) {
+            BufferedImage image = ImageIO.read(inputStream);
+            if (image == null || image.getWidth() <= 0 || image.getHeight() <= 0) {
+                return null;
+            }
+
+            int width = image.getWidth();
+            int height = image.getHeight();
+            double aspectRatio = (double) width / height;
+            return new ImageDimensions(width, height, aspectRatio);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private record ImageDimensions(int width, int height, double aspectRatio) {
+    }
 }

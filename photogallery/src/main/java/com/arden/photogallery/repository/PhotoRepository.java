@@ -35,6 +35,28 @@ public interface PhotoRepository extends JpaRepository<Photo, Long> {
             style AS style,
             lighting AS lighting,
             primary_subject AS primarySubject,
+            width AS width,
+            height AS height,
+            aspect_ratio AS aspectRatio,
+            created_at AS createdAt
+        FROM photo
+        ORDER BY created_at DESC
+        """, nativeQuery = true)
+    List<PhotoSearchRow> findAllGalleryRows();
+
+    @Query(value = """
+        SELECT
+            id AS id,
+            title AS title,
+            s3url AS s3Url,
+            caption AS caption,
+            mood AS mood,
+            style AS style,
+            lighting AS lighting,
+            primary_subject AS primarySubject,
+            width AS width,
+            height AS height,
+            aspect_ratio AS aspectRatio,
             created_at AS createdAt
         FROM photo
         WHERE id IN (:ids)

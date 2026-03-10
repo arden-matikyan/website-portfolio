@@ -1,6 +1,7 @@
 package com.arden.photogallery.service;
 
 import java.time.Duration;
+import java.net.URI;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -42,21 +43,57 @@ public class S3Service {
 
     public String generatePresignedUrl(String key) {
 
-        S3Presigner presigner = S3Presigner.create();
+        try (S3Presigner presigner = S3Presigner.create()) {
 
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build();
 
-        GetObjectPresignRequest presignRequest
-                = GetObjectPresignRequest.builder()
-                        .signatureDuration(Duration.ofMinutes(10))
-                        .getObjectRequest(getObjectRequest)
-                        .build();
+            GetObjectPresignRequest presignRequest
+                    = GetObjectPresignRequest.builder()
+                            .signatureDuration(Duration.ofMinutes(10))
+                            .getObjectRequest(getObjectRequest)
+                            .build();
 
-        return presigner.presignGetObject(presignRequest)
-                .url()
-                .toString();
+            return presigner.presignGetObject(presignRequest)
+                    .url()
+                    .toString();
+        }
+    }
+
+    public String generatePresignedUrlFromStoredUrl(String storedUrlOrKey) {
+        if (storedUrlOrKey == null || storedUrlOrKey.isBlank()) {
+            return storedUrlOrKey;
+        }
+
+        try {
+            String key = extractObjectKey(storedUrlOrKey);
+            return generatePresignedUrl(key);
+        } catch (RuntimeException e) {
+            return storedUrlOrKey;
+        }
+    }
+
+    private String extractObjectKey(String storedUrlOrKey) {
+        if (!storedUrlOrKey.startsWith("http://") && !storedUrlOrKey.startsWith("https://")) {
+            return storedUrlOrKey;
+        }
+
+        URI uri = URI.create(storedUrlOrKey);
+        String path = uri.getPath();
+
+        if (path == null || path.isBlank()) {
+            throw new IllegalArgumentException("Invalid S3 URL: missing object key");
+        }
+
+        String trimmedPath = path.startsWith("/") ? path.substring(1) : path;
+        String bucketPrefix = bucketName + "/";
+
+        if (trimmedPath.startsWith(bucketPrefix)) {
+            return trimmedPath.substring(bucketPrefix.length());
+        }
+
+        return trimmedPath;
     }
 }
