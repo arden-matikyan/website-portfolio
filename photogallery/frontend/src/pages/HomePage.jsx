@@ -31,8 +31,14 @@ function HomePage() {
             <h1 className="hero-title">Hi, I&apos;m Arden.</h1>
             <h2 className="section-title">About Me</h2>
           <p className="hero-text">
-            .... 
+            I'm a full-stack and backend software engineer with a strong interest in machine learning and AI. 
           </p>
+          <p className="hero-text">
+            At heart, I'm an engineer. I completed my B.S. in Computer Engineering and later focused more on software, earning an M.Eng. in Software Engineering, both from the University of Maryland. 
+          </p>       
+          <p className="hero-text">
+            This website is a personal project I use to stay fresh on my creative side and keep my full-stack skills sharp. Be sure to check out my photo gallery, where I've included a semantic search feature. More to come!          
+          </p>    
           </section>
 
           <section className="section-panel home-tools-panel reveal reveal-delay">

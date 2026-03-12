@@ -179,14 +179,18 @@
 .portrait-image,
 .portrait-placeholder {
   width: min(100%, 390px);
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 2/3;
   border-radius: 14px;
+  user-select: none;
+  cursor: default;
 }
 
 .portrait-image {
   height: auto;
   object-fit: cover;
   border: 1px solid var(--border);
+  user-select: none;
+  cursor: default;
 }
 
 .portrait-placeholder {
@@ -199,6 +203,7 @@
     linear-gradient(140deg, rgba(15, 118, 110, 0.11), rgba(249, 210, 133, 0.24)),
     #fffaf2;
   border: 1px dashed var(--border);
+  user-select: none;
 }
 
 .section-title,
@@ -380,7 +385,7 @@
   position: relative;
   overflow: hidden;
   box-shadow: 0 8px 20px -14px rgba(19, 31, 43, 0.55);
-  cursor: zoom-in;
+  cursor: pointer; ;
 }
 
 .gallery-tile:focus-visible {
@@ -596,12 +601,11 @@
   animation: scroll-icons 18s linear infinite;
 }
 
-/*
+
 .language-slider:hover .language-slider__track {
-  animation-direction: reverse;
-  animation-duration: 40s;
+  animation-play-state: paused;
 }
-*/
+
 
 .language-chip {
   width: 126px;
@@ -614,6 +618,8 @@
   align-content: center;
   padding: 0.8rem 0.65rem;
   gap: 0.5rem;
+
+  user-select: none;
 }
 
 .language-chip__icon {
