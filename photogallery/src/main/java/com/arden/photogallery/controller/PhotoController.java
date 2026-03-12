@@ -74,11 +74,22 @@ public class PhotoController {
     }
 
     @GetMapping("/search")
-    public List<Photo> semanticSearch(@RequestParam String q) {
+    public List<Photo> semanticSearch(@RequestParam(required = false, defaultValue = "") String q) {
+        String normalizedQuery = q == null ? "" : q.trim();
+        if (normalizedQuery.length() > 100) {
+            normalizedQuery = normalizedQuery.substring(0, 100);
+        }
+
+        if (normalizedQuery.isBlank()) {
+            return photoService.getAllPhotos()
+                    .stream()
+                    .map(this::withReadableS3Url)
+                    .toList();
+        }
 
         float[] queryVector = mockAiEnabled
-                ? buildMockEmbedding(q)
-                : embeddingService.generateEmbedding(q);
+                ? buildMockEmbedding(normalizedQuery)
+                : embeddingService.generateEmbedding(normalizedQuery);
 
         String vectorLiteral = toVectorLiteral(queryVector);
 
@@ -95,23 +106,25 @@ public class PhotoController {
         return ids.stream()
                 .map(rowsById::get)
                 .filter(java.util.Objects::nonNull)
-                .map(row -> {
-                    Photo photo = new Photo();
-                    photo.setId(row.getId());
-                    photo.setTitle(row.getTitle());
-                    photo.setS3Url(s3Service.generatePresignedUrlFromStoredUrl(row.getS3Url()));
-                    photo.setCaption(row.getCaption());
-                    photo.setMood(row.getMood());
-                    photo.setStyle(row.getStyle());
-                    photo.setLighting(row.getLighting());
-                    photo.setPrimarySubject(row.getPrimarySubject());
-                    photo.setWidth(row.getWidth());
-                    photo.setHeight(row.getHeight());
-                    photo.setAspectRatio(row.getAspectRatio());
-                    photo.setCreatedAt(row.getCreatedAt());
-                    return photo;
-                })
+                .map(this::toSearchPhotoWithReadableUrl)
                 .toList();
+    }
+
+    private Photo toSearchPhotoWithReadableUrl(PhotoSearchRow row) {
+        Photo photo = new Photo();
+        photo.setId(row.getId());
+        photo.setTitle(row.getTitle());
+        photo.setS3Url(s3Service.generatePresignedUrlFromStoredUrl(row.getS3Url()));
+        photo.setCaption(row.getCaption());
+        photo.setMood(row.getMood());
+        photo.setStyle(row.getStyle());
+        photo.setLighting(row.getLighting());
+        photo.setPrimarySubject(row.getPrimarySubject());
+        photo.setWidth(row.getWidth());
+        photo.setHeight(row.getHeight());
+        photo.setAspectRatio(row.getAspectRatio());
+        photo.setCreatedAt(row.getCreatedAt());
+        return photo;
     }
 
     private Photo withReadableS3Url(Photo photo) {

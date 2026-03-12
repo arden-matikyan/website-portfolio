@@ -1,7 +1,7 @@
 package com.arden.photogallery.service;
 
-import java.time.Duration;
 import java.net.URI;
+import java.time.Duration;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -80,20 +80,43 @@ public class S3Service {
             return storedUrlOrKey;
         }
 
-        URI uri = URI.create(storedUrlOrKey);
-        String path = uri.getPath();
+        try {
+            URI uri = URI.create(storedUrlOrKey);
+            String path = uri.getPath();
 
-        if (path == null || path.isBlank()) {
-            throw new IllegalArgumentException("Invalid S3 URL: missing object key");
+            if (path == null || path.isBlank()) {
+                throw new IllegalArgumentException("Invalid S3 URL: missing object key");
+            }
+
+            String trimmedPath = path.startsWith("/") ? path.substring(1) : path;
+            String bucketPrefix = bucketName + "/";
+
+            if (trimmedPath.startsWith(bucketPrefix)) {
+                return trimmedPath.substring(bucketPrefix.length());
+            }
+
+            return trimmedPath;
+        } catch (Exception e) {
+            // Fallback parsing for URLs containing spaces or other characters that break URI parsing.
+            try {
+                String marker = ".amazonaws.com/";
+                int idx = storedUrlOrKey.indexOf(marker);
+                if (idx >= 0) {
+                    String trailing = storedUrlOrKey.substring(idx + marker.length());
+                    int q = trailing.indexOf('?');
+                    return q >= 0 ? trailing.substring(0, q) : trailing;
+                }
+            } catch (Exception ignore) {
+                // fall through to last-resort extraction
+            }
+
+            int lastSlash = storedUrlOrKey.lastIndexOf('/');
+            String key = lastSlash >= 0 ? storedUrlOrKey.substring(lastSlash + 1) : storedUrlOrKey;
+            int q = key.indexOf('?');
+            if (q >= 0) {
+                key = key.substring(0, q);
+            }
+            return key;
         }
-
-        String trimmedPath = path.startsWith("/") ? path.substring(1) : path;
-        String bucketPrefix = bucketName + "/";
-
-        if (trimmedPath.startsWith(bucketPrefix)) {
-            return trimmedPath.substring(bucketPrefix.length());
-        }
-
-        return trimmedPath;
     }
 }

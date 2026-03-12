@@ -1,10 +1,14 @@
+
+// local host for dev, assume frontend and backend sahre same origin 
 const DEFAULT_API_BASE_URL = import.meta.env.DEV ? 'http://localhost:8080' : ''
 
+// override via env variable 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(
   /\/$/,
   '',
 )
 
+// generic request helper 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -28,5 +32,13 @@ async function request(path, options = {}) {
 
 export async function getPhotos() {
   const photos = await request('/api/photos')
+  return Array.isArray(photos) ? photos : []
+}
+
+export async function searchPhotos(query) {
+  const trimmedQuery = typeof query === 'string' ? query.trim() : ''
+  const cappedQuery = trimmedQuery.slice(0, 100)
+  const params = new URLSearchParams({ q: cappedQuery })
+  const photos = await request(`/api/photos/search?${params.toString()}`)
   return Array.isArray(photos) ? photos : []
 }

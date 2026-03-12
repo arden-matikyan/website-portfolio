@@ -21,7 +21,6 @@ public interface PhotoRepository extends JpaRepository<Photo, Long> {
         SELECT id
         FROM photo
         ORDER BY embedding <-> CAST(:queryEmbedding AS vector)
-        LIMIT 10
         """, nativeQuery = true)
     List<Long> searchIdsByEmbedding(@Param("queryEmbedding") String queryEmbedding);
 
