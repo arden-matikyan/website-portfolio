@@ -5,7 +5,7 @@ import { searchPhotos } from '../api'
 const DEFAULT_ASPECT_RATIO = 3 / 2
 const GALLERY_GAP_PX = 12
 const TARGET_FILL_RATIO = 0.9
-const ROWS_PER_PAGE = 3
+const ROWS_PER_PAGE = 2
 
 function getNumericValue(value) {
   const parsed = Number(value)
@@ -65,15 +65,15 @@ async function resolveAspectRatio(photo) {
 
 function getTargetRowHeight(containerWidth) {
   if (containerWidth < 480) {
-    return 110
+    return 140
   }
 
   if (containerWidth < 720) {
-    return 135
+    return 165
   }
 
   if (containerWidth < 960) {
-    return 165
+    return 180
   }
 
   return 210
@@ -304,7 +304,7 @@ function PhotographyPage() {
       <section className="page">
         <header className="photo-page-header reveal">
           <p className="photo-page-kicker">Photography</p>
-          <h1 className="photo-page-title">Curated Gallery</h1>
+          <h1 className="photo-page-title"> Gallery</h1>
           <p className="photo-page-description">
             A side hobby of mine. I love experimenting with different styles and techniques,
             capturing a variety of subjects. I shoot on DSLR and film cameras. Here are a few of
@@ -398,7 +398,7 @@ function PhotographyPage() {
                   onClick={() => setCurrentPage((pageIndex) => Math.max(pageIndex - 1, 0))}
                   disabled={!canGoPrevious}
                 >
-                  {'<'}
+                  {'\u21BD'}
                 </button>
                 <button
                   type="button"
@@ -409,7 +409,7 @@ function PhotographyPage() {
                   }
                   disabled={!canGoNext}
                 >
-                  {'>'}
+                  {'\u21C1'}
                 </button>
               </div>
             ) : null}
