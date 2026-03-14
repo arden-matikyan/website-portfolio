@@ -5,7 +5,7 @@ import { searchPhotos } from '../api'
 const DEFAULT_ASPECT_RATIO = 3 / 2
 const GALLERY_GAP_PX = 12
 const TARGET_FILL_RATIO = 0.9
-const ROWS_PER_PAGE = 2
+const ROWS_PER_PAGE = 3
 
 function getNumericValue(value) {
   const parsed = Number(value)
@@ -303,8 +303,7 @@ function PhotographyPage() {
     <>
       <section className="page">
         <header className="photo-page-header reveal">
-          <p className="photo-page-kicker">Photography</p>
-          <h1 className="photo-page-title"> Gallery</h1>
+          <h1 className="photo-page-title"> Photo Gallery</h1>
           <p className="photo-page-description">
             A side hobby of mine. I love experimenting with different styles and techniques,
             capturing a variety of subjects. I shoot on DSLR and film cameras. Here are a few of

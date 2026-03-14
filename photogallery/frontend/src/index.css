@@ -29,6 +29,12 @@ html {
 
 body {
   min-width: 320px;
+  background: #1c1c1e;
+  color: #e8ecf2;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 a {

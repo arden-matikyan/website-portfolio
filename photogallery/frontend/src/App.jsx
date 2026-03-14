@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage'
 import PhotographyPage from './pages/PhotographyPage'
 import ProjectsPage from './pages/ProjectsPage'
 import ResumePage from './pages/ResumePage'
+import SquareGridBackground from './SquareGridBackground'
 
 const NAV_LINKS = [
   { id: 'home', label: 'Home' },
@@ -93,6 +94,7 @@ function App() {
 
   return (
     <div className="app-shell">
+      <SquareGridBackground />
       <Navbar links={NAV_LINKS} activePage={activePage} onNavigate={setActivePage} />
       <main className="page-shell stacked-pages">
         {PAGE_SECTIONS.map((section) => {
