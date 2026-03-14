@@ -1,21 +1,21 @@
 const projects = [
   {
-    name: 'Photo Gallery API',
-    stack: 'Java, Spring Boot, PostgreSQL',
+    name: 'Adaptive Game Agent for Ashta-Chamma',
+    stack: 'Reinforcement Learning, Python, OpenAI Gym',
     summary:
-      'Image upload, tagging, and search pipeline for personal and client galleries.',
+      'Built a reinforcement learning agent for the board game Ashta-Chamma that learns to adapt to different opponent strategies. The project implemented Proximal Policy Optimization (PPO) and Deep Q-Networks (DQN) within a custom OpenAI Gym training environment that simulates aggressive, defensive, and stochastic opponents, enabling the agent to make strategic decisions in a high-dimensional state space.',
   },
   {
     name: 'Portfolio Frontend',
-    stack: 'React, Vite, CSS',
+    stack: 'React, Spring Boot, OpenAI API, Amazon S3, PostgreSQL, Docker',
     summary:
-      'Fast, responsive portfolio site with modular page components and mobile-first behavior.',
+      'Built a full-stack photography portfolio application featuring semantic image search powered by the OpenAI API. The system generates vector embeddings for images and captions, enabling natural language queries that retrieve visually relevant photos through similarity search. Images are stored in Amazon S3 while metadata and embeddings are indexed for efficient retrieval through RESTful APIs. A lightweight React frontend presents the portfolio and search interface.',
   },
   {
-    name: 'AI Caption Assistant',
-    stack: 'OpenAI API, Java, Vector Search',
+    name: 'CIFAR-10 Image Classification System',
+    stack: 'PyTorch, Convoluitional Neural Networks',
     summary:
-      'Generates searchable photo descriptions and natural-language image retrieval.',
+      'Implemented multiple neural network architectures from scratch in PyTorch to explore image classification on the CIFAR-10 dataset, building core deep learning components such as vectorized backpropagation, batch normalization, layer normalization, and dropout regularization. Conducted systematic experiments comparing optimizers (SGD, Adam, RMSprop) and regularization strategies to analyze training dynamics and convergence behavior across different CNN architectures.',
   },
 ]
 
