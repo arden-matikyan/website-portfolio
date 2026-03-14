@@ -12,8 +12,18 @@ spring:
         format_sql: true
   servlet:
     multipart:
-      max-file-size: 25MB
-      max-request-size: 25MB
+      max-file-size: 15MB
+      max-request-size: 15MB
+
+server:
+  server:
+  address: 0.0.0.0
+  port: 8080
+  tomcat:
+    threads:
+      max: 20
+      min-spare: 5
+
 aws:
   region: us-east-1
   s3:
@@ -24,5 +34,4 @@ openai:
 
 app:
   ai:
-    # Set true to bypass OpenAI vision + embedding calls with deterministic mock data.
     mock-enabled: ${MOCK_AI_ENABLED:false}

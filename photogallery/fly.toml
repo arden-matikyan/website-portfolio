@@ -1,0 +1,26 @@
+# fly.toml app configuration file generated for photogallery-app on 2026-03-14T16:35:52-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "photogallery-app"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+[env]
+  MOCK_AI_ENABLED = "false"

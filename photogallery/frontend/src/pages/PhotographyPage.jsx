@@ -6,6 +6,7 @@ const DEFAULT_ASPECT_RATIO = 3 / 2
 const GALLERY_GAP_PX = 12
 const TARGET_FILL_RATIO = 0.9
 const ROWS_PER_PAGE = 3
+const TILE_HEIGHT_SCALE = 1.25
 
 function getNumericValue(value) {
   const parsed = Number(value)
@@ -65,18 +66,18 @@ async function resolveAspectRatio(photo) {
 
 function getTargetRowHeight(containerWidth) {
   if (containerWidth < 480) {
-    return 140
+    return 140 * TILE_HEIGHT_SCALE
   }
 
   if (containerWidth < 720) {
-    return 165
+    return 165 * TILE_HEIGHT_SCALE
   }
 
   if (containerWidth < 960) {
-    return 180
+    return 180 * TILE_HEIGHT_SCALE
   }
 
-  return 210
+  return 210 * TILE_HEIGHT_SCALE
 }
 
 function toJustifiedRows(items, containerWidth, targetRowHeight, gap) {
@@ -146,6 +147,10 @@ function toRowPages(rows, rowsPerPage) {
 
 function getDisplayName(photo) {
   return photo.title || photo.primarySubject || photo.style || 'Untitled'
+}
+
+function getTileCaption(photo) {
+  return photo.caption || getDisplayName(photo)
 }
 
 function PhotographyPage() {
@@ -372,12 +377,11 @@ function PhotographyPage() {
                             <img
                               className="gallery-tile__image"
                               src={photo.s3Url}
-                              alt={photo.caption || getDisplayName(photo)}
+                              alt={getTileCaption(photo)}
                               loading="eager"
                             />
                             <div className="gallery-tile__inner">
-                              <p className="gallery-tile__id">{String(photo.index + 1).padStart(2, '0')}</p>
-                              <p className="gallery-tile__meta">{getDisplayName(photo)}</p>
+                              <p className="gallery-tile__caption">{getTileCaption(photo)}</p>
                             </div>
                           </article>
                         ))}
