@@ -5,13 +5,19 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
+import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,7 +31,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.HttpStatus;
 
 import com.arden.photogallery.model.Photo;
 import com.arden.photogallery.repository.PhotoRepository;
@@ -44,12 +49,22 @@ import lombok.RequiredArgsConstructor;
 public class PhotoController {
 
     private static final int EMBEDDING_DIMENSION = 1536;
+    private static final Duration SEARCH_RATE_LIMIT_WINDOW = Duration.ofMinutes(1);
 
     @Value("${app.ai.mock-enabled:false}")
     private boolean mockAiEnabled;
 
     @Value("${app.admin.token:}")
     private String adminToken;
+
+    @Value("${app.search.rate-limit.per-ip:30}")
+    private int searchRequestsPerIpPerWindow;
+
+    @Value("${app.search.rate-limit.per-query:8}")
+    private int searchRequestsPerIpAndQueryPerWindow;
+
+    private final Map<String, ArrayDeque<Instant>> searchRequestsByIp = new ConcurrentHashMap<>();
+    private final Map<String, ArrayDeque<Instant>> searchRequestsByIpAndQuery = new ConcurrentHashMap<>();
 
     private final PhotoService photoService;
     private final S3Service s3Service;
@@ -88,11 +103,15 @@ public class PhotoController {
     }
 
     @GetMapping("/search")
-    public List<Photo> semanticSearch(@RequestParam(required = false, defaultValue = "") String q) {
+    public List<Photo> semanticSearch(
+            @RequestParam(required = false, defaultValue = "") String q,
+            HttpServletRequest request) {
         String normalizedQuery = q == null ? "" : q.trim();
         if (normalizedQuery.length() > 100) {
             normalizedQuery = normalizedQuery.substring(0, 100);
         }
+
+        enforceSearchRateLimit(request, normalizedQuery);
 
         if (normalizedQuery.isBlank()) {
             return photoService.getAllPhotos()
@@ -286,6 +305,56 @@ public class PhotoController {
         }
     }
 
+    private void enforceSearchRateLimit(HttpServletRequest request, String normalizedQuery) {
+        String clientIp = extractClientIp(request);
+        if (!allowWithinWindow(searchRequestsByIp, clientIp, searchRequestsPerIpPerWindow)) {
+            throw new TooManyRequestsException();
+        }
+
+        String normalizedKey = normalizedQuery == null ? "" : normalizedQuery.toLowerCase();
+        String combinedKey = clientIp + "|" + normalizedKey;
+        if (!allowWithinWindow(searchRequestsByIpAndQuery, combinedKey, searchRequestsPerIpAndQueryPerWindow)) {
+            throw new TooManyRequestsException();
+        }
+    }
+
+    private boolean allowWithinWindow(Map<String, ArrayDeque<Instant>> requestStore, String key, int limit) {
+        if (limit <= 0) {
+            return true;
+        }
+
+        Instant now = Instant.now();
+        Instant cutoff = now.minus(SEARCH_RATE_LIMIT_WINDOW);
+        ArrayDeque<Instant> timestamps = requestStore.computeIfAbsent(key, ignored -> new ArrayDeque<>());
+
+        synchronized (timestamps) {
+            while (!timestamps.isEmpty() && timestamps.peekFirst().isBefore(cutoff)) {
+                timestamps.pollFirst();
+            }
+
+            if (timestamps.size() >= limit) {
+                return false;
+            }
+
+            timestamps.addLast(now);
+            return true;
+        }
+    }
+
+    private String extractClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+
+        return request.getRemoteAddr();
+    }
+
     private boolean tokensMatch(String expectedToken, String providedToken) {
         if (expectedToken == null || expectedToken.isBlank() || providedToken == null) {
             return false;
@@ -298,6 +367,10 @@ public class PhotoController {
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     private static class UnauthorizedException extends RuntimeException {
+    }
+
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    private static class TooManyRequestsException extends RuntimeException {
     }
 
     private record ImageDimensions(int width, int height, double aspectRatio) {

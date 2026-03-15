@@ -37,3 +37,7 @@ app:
     mock-enabled: ${MOCK_AI_ENABLED:false}
   admin:
     token: ${APP_ADMIN_TOKEN:}
+  search:
+    rate-limit:
+      per-ip: ${APP_SEARCH_RATE_LIMIT_PER_IP:30}
+      per-query: ${APP_SEARCH_RATE_LIMIT_PER_QUERY:8}
