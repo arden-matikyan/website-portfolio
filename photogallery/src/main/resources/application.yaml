@@ -35,3 +35,5 @@ openai:
 app:
   ai:
     mock-enabled: ${MOCK_AI_ENABLED:false}
+  admin:
+    token: ${APP_ADMIN_TOKEN:}

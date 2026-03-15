@@ -3,6 +3,8 @@ package com.arden.photogallery.controller;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,10 +19,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpStatus;
 
 import com.arden.photogallery.model.Photo;
 import com.arden.photogallery.repository.PhotoRepository;
@@ -43,6 +48,9 @@ public class PhotoController {
     @Value("${app.ai.mock-enabled:false}")
     private boolean mockAiEnabled;
 
+    @Value("${app.admin.token:}")
+    private String adminToken;
+
     private final PhotoService photoService;
     private final S3Service s3Service;
     // private final AIService aiService;
@@ -51,7 +59,10 @@ public class PhotoController {
     private final PhotoRepository photoRepository;
 
     @PostMapping
-    public Photo createPhoto(@RequestBody Photo photo) {
+    public Photo createPhoto(
+            @RequestHeader(value = "X-Admin-Token", required = false) String providedToken,
+            @RequestBody Photo photo) {
+        requireAdminToken(providedToken);
         return photoService.savePhoto(photo);
     }
 
@@ -69,7 +80,10 @@ public class PhotoController {
     }
 
     @DeleteMapping("/{id}")
-    public void deletePhoto(@PathVariable Long id) {
+    public void deletePhoto(
+            @RequestHeader(value = "X-Admin-Token", required = false) String providedToken,
+            @PathVariable Long id) {
+        requireAdminToken(providedToken);
         photoService.deletePhoto(id);
     }
 
@@ -156,9 +170,11 @@ public class PhotoController {
 
     @PostMapping("/upload")
     public Photo uploadPhoto(
+            @RequestHeader(value = "X-Admin-Token", required = false) String providedToken,
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String title
     ) throws IOException {
+        requireAdminToken(providedToken);
 
         byte[] fileBytes = file.getBytes();
         ImageDimensions dimensions = extractImageDimensions(fileBytes);
@@ -262,6 +278,26 @@ public class PhotoController {
         } catch (IOException e) {
             return null;
         }
+    }
+
+    private void requireAdminToken(String providedToken) {
+        if (!tokensMatch(adminToken, providedToken)) {
+            throw new UnauthorizedException();
+        }
+    }
+
+    private boolean tokensMatch(String expectedToken, String providedToken) {
+        if (expectedToken == null || expectedToken.isBlank() || providedToken == null) {
+            return false;
+        }
+
+        return MessageDigest.isEqual(
+                expectedToken.getBytes(StandardCharsets.UTF_8),
+                providedToken.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    private static class UnauthorizedException extends RuntimeException {
     }
 
     private record ImageDimensions(int width, int height, double aspectRatio) {
