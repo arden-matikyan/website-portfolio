@@ -23,11 +23,11 @@ primary_region = "ord"
     handlers = ["tls", "http"]
 
   [[services.http_checks]]
-    interval = "10s"
+    interval = "1m"
     timeout = "2s"
     grace_period = "20s"
     method = "get"
-    path = "/api/photos"
+    path = "/health"
 
 [env]
   MOCK_AI_ENABLED = "false"
