@@ -1,6 +1,8 @@
 
-// local host for dev, assume frontend and backend sahre same origin 
-const DEFAULT_API_BASE_URL = import.meta.env.DEV ? 'http://localhost:8080' : ''
+// local host for dev, Fly backend in production unless overridden
+const DEFAULT_API_BASE_URL = import.meta.env.DEV
+  ? 'http://localhost:8080'
+  : 'https://photogallery-app.fly.dev'
 
 // override via env variable 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(
