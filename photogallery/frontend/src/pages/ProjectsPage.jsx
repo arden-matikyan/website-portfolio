@@ -1,6 +1,6 @@
 const projects = [
   {
-    name: 'Adaptive Game Agent for Ashta-Chamma',
+    name: 'Adaptive Game Agent for Board Game',
     stack: 'Reinforcement Learning, Python, OpenAI Gym',
     summary:
       'Built a reinforcement learning agent for the board game Ashta-Chamma that learns to adapt to different opponent strategies. The project implemented Proximal Policy Optimization (PPO) and Deep Q-Networks (DQN) within a custom OpenAI Gym training environment that simulates aggressive, defensive, and stochastic opponents, enabling the agent to make strategic decisions in a high-dimensional state space.',

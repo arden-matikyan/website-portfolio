@@ -110,17 +110,16 @@ export default function SquareGridBackground() {
     
     // Touch event handlers for mobile/finger support
     const onTouchStart = (e) => {
-      e.preventDefault();
       const touch = e.touches[0];
+      if (!touch) return;
       stateRef.current.mouse = { x: touch.clientX, y: touch.clientY };
     };
     const onTouchMove = (e) => {
-      e.preventDefault();
       const touch = e.touches[0];
+      if (!touch) return;
       stateRef.current.mouse = { x: touch.clientX, y: touch.clientY };
     };
-    const onTouchEnd = (e) => {
-      e.preventDefault();
+    const onTouchEnd = () => {
       stateRef.current.mouse = { x: -9999, y: -9999 };
     };
     
