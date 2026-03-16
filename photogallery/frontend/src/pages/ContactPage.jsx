@@ -5,7 +5,7 @@ function ContactPage() {
 
       <section className="section-panel contact-layout reveal reveal-delay">
         <div>
-          <h2 className="section-title">Contact Me</h2>
+          <h2 className="section-title">Contact Me (Not Yet)</h2>
           <p className="card-text">
             Email: <a href="mailto:you@example.com">ardenmatikyan@gmail.com</a>
           </p>

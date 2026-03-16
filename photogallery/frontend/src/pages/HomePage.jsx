@@ -29,7 +29,6 @@ function HomePage() {
         <div className="home-left-stack">
           <section className="section-panel reveal">
             <h1 className="hero-title">Hi, I&apos;m Arden.</h1>
-            <h2 className="section-title">About Me</h2>
           <p className="hero-text">
             I'm a full-stack and backend software engineer with a strong interest in machine learning and AI. 
           </p>
