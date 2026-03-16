@@ -6,7 +6,7 @@ const projects = [
       'Built a reinforcement learning agent for the board game Ashta-Chamma that learns to adapt to different opponent strategies. The project implemented Proximal Policy Optimization (PPO) and Deep Q-Networks (DQN) within a custom OpenAI Gym training environment that simulates aggressive, defensive, and stochastic opponents, enabling the agent to make strategic decisions in a high-dimensional state space.',
   },
   {
-    name: 'Portfolio Frontend',
+    name: 'Web Portfolio',
     stack: 'React, Spring Boot, OpenAI API, Amazon S3, PostgreSQL, Docker',
     summary:
       'Built a full-stack photography portfolio application featuring semantic image search powered by the OpenAI API. The system generates vector embeddings for images and captions, enabling natural language queries that retrieve visually relevant photos through similarity search. Images are stored in Amazon S3 while metadata and embeddings are indexed for efficient retrieval through RESTful APIs. A lightweight React frontend presents the portfolio and search interface.',
