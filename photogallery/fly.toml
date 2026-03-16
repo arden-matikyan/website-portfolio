@@ -7,7 +7,7 @@ app = "photogallery-app"
 primary_region = "ord"
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = "dockerfile"
 
 [[services]]
   protocol = "tcp"
