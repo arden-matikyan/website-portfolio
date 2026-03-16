@@ -311,8 +311,10 @@ function PhotographyPage() {
           <h1 className="photo-page-title"> Photo Gallery</h1>
           <p className="photo-page-description">
             A side hobby of mine. I love experimenting with different styles and techniques,
-            capturing a variety of subjects. I shoot on DSLR and film cameras. Here are a few of
-            my favorites.
+            capturing a variety of subjects. I shoot on DSLR and film cameras. Here is a small collection of my shots.
+          </p>
+          <p className="photo-page-description">
+            Image captions are generated using OpenAI. Try the semantic search below. Currently, the search returns all images ranked by semantic similarity to your query.
           </p>
           <form className="photo-search" onSubmit={handleSearchSubmit}>
             <input
@@ -321,7 +323,7 @@ function PhotographyPage() {
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value.slice(0, 100))}
               maxLength={100}
-              placeholder="Try semantic searches with embeddings from OpenAI"
+              placeholder="Search photos..."
               aria-label="Search photos"
             />
             <button type="submit" className="photo-search__button" aria-label="Run photo search">
