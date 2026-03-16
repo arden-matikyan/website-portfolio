@@ -321,7 +321,7 @@ function PhotographyPage() {
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value.slice(0, 100))}
               maxLength={100}
-              placeholder="Search photos..."
+              placeholder="Try semantic searches with embeddings from OpenAI"
               aria-label="Search photos"
             />
             <button type="submit" className="photo-search__button" aria-label="Run photo search">
