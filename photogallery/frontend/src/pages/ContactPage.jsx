@@ -89,7 +89,7 @@ function ContactPage() {
       <section className="section-panel contact-layout reveal reveal-delay">
         <div className="contact-card">
           <p className="eyebrow">Contact</p>
-          <h2 className="section-title">Let&apos;s Connect</h2>
+          <h2 className="section-title">Let&apos;s Connect (Not yet)</h2>
           <p className="section-subtitle">
             Send a note here or reach out directly if you prefer email or socials.
           </p>
