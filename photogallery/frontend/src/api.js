@@ -44,3 +44,13 @@ export async function searchPhotos(query) {
   const photos = await request(`/api/photos/search?${params.toString()}`)
   return Array.isArray(photos) ? photos : []
 }
+
+export async function sendContactMessage(payload) {
+  return request('/api/contact', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+}
