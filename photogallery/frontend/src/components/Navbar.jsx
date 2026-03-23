@@ -11,7 +11,7 @@ function Navbar({ links, activePage, onNavigate }) {
           href="#home"
           onClick={() => handleNavigate('home')}
         >
-          TESTING BRANCH
+          Arden Matikyan
         </a>
         <nav aria-label="Primary">
           <ul className="site-nav__links">
