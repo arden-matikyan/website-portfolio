@@ -43,3 +43,10 @@ app:
     rate-limit:
       per-ip: ${APP_SEARCH_RATE_LIMIT_PER_IP:30}
       per-query: ${APP_SEARCH_RATE_LIMIT_PER_QUERY:8}
+  contact:
+    rate-limit:
+      per-ip: ${APP_CONTACT_RATE_LIMIT_PER_IP:5}
+    email:
+      api-key: ${APP_CONTACT_RESEND_API_KEY:}
+      from: ${APP_CONTACT_FROM:}
+      to: ${APP_CONTACT_TO:ardenmatikyan@gmail.com}
